@@ -1,5 +1,6 @@
 package com.krakedev.jwt.services;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import com.krakedev.jwt.entidades.Usuario;
@@ -15,24 +16,58 @@ public class UsuarioService {
     }
 
     // Registrar usuario
+//    public Usuario registrar(Usuario usuario) {
+//
+//        return usuarioRepository.save(usuario);
+//
+//    }
+//
+//    // Iniciar sesion
+//    public Usuario login(String username, String password) {
+//
+//        Usuario usuario = usuarioRepository.findByUsername(username)
+//                .orElse(null);
+//
+//        if (usuario != null && usuario.getPassword().equals(password)) {
+//
+//            return usuario;
+//
+//        }
+//
+//        return null;
+//    }
+    
+    
+ // Registrar usuario con contraseña protegida
     public Usuario registrar(Usuario usuario) {
 
-        return usuarioRepository.save(usuario);
+        String passwordHash = BCrypt.hashpw(
+                usuario.getPassword(),
+                BCrypt.gensalt()
+        );
 
+        usuario.setPassword(passwordHash);
+
+        return usuarioRepository.save(usuario);
     }
 
-    // Iniciar sesion
+    // Iniciar sesion verificando la contraseña
     public Usuario login(String username, String password) {
 
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElse(null);
 
-        if (usuario != null && usuario.getPassword().equals(password)) {
+        if (usuario != null && BCrypt.checkpw(
+                password,
+                usuario.getPassword())) {
 
             return usuario;
-
         }
 
         return null;
     }
+    
+    
+    
+    
 }
