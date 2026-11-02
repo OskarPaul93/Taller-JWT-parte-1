@@ -1,20 +1,25 @@
 package com.krakedev.jwt.controllers;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.krakedev.jwt.entidades.Usuario;
 import com.krakedev.jwt.services.UsuarioService;
+import com.krakedev.jwt.utils.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(UsuarioService usuarioService) {
+    public AuthController(UsuarioService usuarioService, JwtUtil jwtUtil) {
         this.usuarioService = usuarioService;
+        this.jwtUtil = jwtUtil;
     }
 
     // Registrar usuario
@@ -48,7 +53,23 @@ public class AuthController {
 
             if (usuarioEncontrado != null) {
 
-                return ResponseEntity.ok(usuarioEncontrado);
+            	String token = jwtUtil.generarToken(
+                        usuarioEncontrado.getUsername(),
+                        usuarioEncontrado.getRol()
+                );
+            	
+            	
+            	//return ResponseEntity.ok(usuarioEncontrado);
+            	 return ResponseEntity.ok(
+                         Map.of(
+                                 "mensaje", "Inicio de sesión correcto",
+                                 "token", token,
+                                 "tipo", "Bearer",
+                                 "id", usuarioEncontrado.getId(),
+                                 "username", usuarioEncontrado.getUsername(),
+                                 "rol", usuarioEncontrado.getRol()
+                         )
+                 );
 
             }
 
