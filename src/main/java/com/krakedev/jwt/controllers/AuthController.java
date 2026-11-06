@@ -83,4 +83,52 @@ public class AuthController {
 
         }
     }
+    @GetMapping("/perfil")
+    public ResponseEntity<?> perfil(@RequestHeader(value = "Authorization", required = false) String authorization) {
+
+        try {
+            // Verificar que exista la cabecera Bearer
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Token no proporcionado");
+            }
+
+            // Extraer el token de la cabecera
+            String token = authorization.substring(7);
+
+            // Validar la firma y la expiración
+            com.auth0.jwt.interfaces.DecodedJWT jwt =
+                    jwtUtil.verificarToken(token);
+
+            // Obtener los datos del usuario desde el token validado
+            String username = jwt.getSubject();
+            String rol = jwt.getClaim("rol").asString();
+
+            // Saludo según el rol
+            String mensaje;
+
+            if ("ADMIN".equals(rol)) {
+                mensaje = "Bienvenido voluntario " + username
+                        + ". Tienes acceso como administrador.";
+            } else if ("USER".equals(rol)) {
+                mensaje = "Bienvenido adoptante " + username
+                        + ". Puedes consultar tu perfil.";
+            } else {
+                mensaje = "Bienvenido " + username;
+            }
+
+            return ResponseEntity.ok(
+                    java.util.Map.of(
+                            "username", username,
+                            "rol", rol,
+                            "mensaje", mensaje
+                    )
+            );
+        } catch (com.auth0.jwt.exceptions.JWTVerificationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Token inválido o expirado");
+        }
+    }
+    
+  
 }
